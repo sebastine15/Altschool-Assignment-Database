@@ -1,0 +1,75 @@
+use mydb;
+db.createCollection('product_management_system');
+show collections;
+db.createCollection("roles");
+db.createCollection("users");
+db.createCollection("categories");
+db.createCollection("products");
+db.createCollection("orders");
+db.createCollection("orderDetails");
+db.roles.insertOne({ "name": "admin" });
+db.users.insertOne({ "name": "user","email": "user@example.com", "password": "password123","roles": ["read"] });
+db.users.insertOne({"name":"Admin","_id":"1","roles":["create","read","update","delete"]});
+db.users.insertOne({"name":"Emmanuel Paul","_id":"2","email":"emmanuelpaul@gmail.com","password":"Emmauelpaul123","roles": ["read","order"]});
+db.categories.insertOne({"categoryId":"2" ,"categoryName":"Roundnecks","categoryDescription": "clothes for men"})
+db.products.insertOne({"productId":"1" ,"productName":"shirts","productPrice": "50","productQuantity":"500","categoryId":"2","productSize":"large"})
+db.orders.insertOne({"orderId":"1" ,"userId":"1","orderQuantity": "30","productId":"1"})
+db.orderDetails.insertOne({"orderDetailsId":"1" ,"orderId":"1","quantity": "50","productId":"1",})
+
+// Create indexes
+db.users.createIndex({ email: 1 });
+db.orders.createIndex({ orderId: 1 });
+db.orderDetails.createIndex({ orderId: 1 });
+
+//query from database
+db.collection.find()
+db.users.find({ name: "Emmanuel Paul" })
+
+//update the user
+db.users.updateOne(
+    { name: "Emmanuel Paul" }, 
+    { $set: { email: "newemail@example.com" } }
+);
+
+// Update the orders 
+db.orders.updateMany(
+    { userId: 2 }, 
+    { $set: { orderQuantity: 100 } }
+);
+
+//delete query
+db.users.deleteOne({ name: "Admin" });
+
+//query joined tables 
+db.orders.aggregate([
+  {
+    $lookup: {
+      from: "users",
+      localField: "userId",
+      foreignField: "_id",
+      as: "user"
+    }
+  },
+  {
+    $lookup: {
+      from: "products",
+      localField: "productId",
+      foreignField: "_id",
+      as: "product"
+    }
+  },
+  {
+    $project: {
+      _id: 1,
+      orderId: 1,
+      orderQuantity: 1,
+      userId: 1,
+      userName: "$user.name",
+      userEmail: "$user.email",
+      product: {
+        productName: "$product.productName",
+        productPrice: "$product.productPrice"
+      }
+    }
+  }
+])
